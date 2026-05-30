@@ -1,0 +1,62 @@
+name: Release Qt app on main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.7.2'
+          cache: true
+
+      - name: Configure CMake
+        run: cmake -B build -S .
+
+      - name: Build Release
+        run: cmake --build build --config Release
+
+      - name: Prepare deploy folder
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path build -Recurse -Filter QtApple.exe |
+            Where-Object { $_.FullName -match '\\Release\\' } |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw "QtApple.exe not found in Release build output"
+          }
+
+          $deployDir = Join-Path $PWD "deploy"
+          New-Item -ItemType Directory -Force -Path $deployDir | Out-Null
+
+          Copy-Item $exe.FullName $deployDir -Force
+
+          windeployqt --release --dir $deployDir $exe.FullName
+
+          Copy-Item -Path "resources" -Destination $deployDir -Recurse -Force
+
+      - name: Create zip package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "deploy\*" -DestinationPath "QtApple-windows.zip" -Force
+
+      - name: Create GitHub prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: main-build-${{ github.run_number }}
+          name: Main build ${{ github.run_number }}
+          prerelease: true
+          files: QtApple-windows.zip
