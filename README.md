@@ -3,7 +3,7 @@ QtApple
 
 Bad Apple made using checkboxes in Qt framework.
 
-![preview gif](/readme/QtApple_2.gif)
+![preview gif](/readme/QtApple.gif)
 
 resources folder
 ---------
