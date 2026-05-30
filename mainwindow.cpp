@@ -10,8 +10,8 @@ constexpr int           GRID_SIDE       = 32;
 constexpr int           GRID_SCALE      = GRID_SIDE * GRID_SIDE;
 constexpr int           FRAMES          = 6572;
 constexpr char          FRAMES_PATH[]   = "resources/frames/";
-constexpr int           DELAY           = 5; // ms for a timer
-constexpr long long     DELAY_ELAPSED   = 33'333'333; // ns for a single frame = 33 ms
+constexpr int           DELAY           = 5;                        // ms for a timer
+constexpr long long     DELAY_ELAPSED   = 33'333'333;               // ns for a single frame ~ 33 ms
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // setup objs
     timer.setInterval(DELAY);
+
     // setup drawing
     connect(&timer, &QTimer::timeout, this, [this](){
         if (drawFrame(current_frame))
@@ -44,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     converted_frames.resize(FRAMES);
     for (int i = 1; i <= FRAMES; ++i) {
         QString path = FRAMES_PATH + "output_" % QString::number(i).rightJustified(4, '0') % ".jpg";
+
         QImage img = QImage(path);
         if (img.isNull())
             qDebug() << "Image " << i << " at " << path << " not found";
@@ -78,6 +80,7 @@ bool MainWindow::drawFrame(int frame_id)
     }
     if (elapsed_timer.nsecsElapsed() < ((long long) frame_id + 1) * DELAY_ELAPSED)
         return false;
+
     QVector<bool> frame = converted_frames[frame_id];
     for (int r = 0; r < GRID_SIDE; ++r) {
         for (int k = 0; k < GRID_SIDE; ++k) {
@@ -87,5 +90,6 @@ bool MainWindow::drawFrame(int frame_id)
                 box->setCheckState(state);
         }
     }
+
     return true;
 }
